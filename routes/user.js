@@ -17,6 +17,7 @@ router.post('/login', function(req, res, next) {
     if (data && data.username) {
       req.session.username = data.username
       req.session.realname = data.realname
+      console.log(req.session)
       res.json(new SuccessModel(result, '登录成功'))
       // return
     } else {
