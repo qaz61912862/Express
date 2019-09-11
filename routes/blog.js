@@ -2,8 +2,17 @@ var express = require('express');
 var router = express.Router();
 const { getList, getDetail, newBlog, updateBlog, deleteBlog } = require('../controller/blog')
 const { SuccessModel, ErrorModel } = require('../model/resModel')
+const LoginCheck  = require('../middleware/loginCheck')
 
-router.get('/list', function(req, res, next) {
+router.get('/list', LoginCheck, function(req, res, next) {
+  console.log(LoginCheck)
+  // if (req.session.username == null) {
+  //   res.json(
+  //     new ErrorModel('未登录')
+  //   )
+  //   return
+  // }
+  // console.log(LoginCheck(req, res, next))
   let author = req.query.author || ''
   const keyword = req.query.keyword || ''
   const result = getList(author, keyword)
@@ -13,10 +22,9 @@ router.get('/list', function(req, res, next) {
         new SuccessModel(listData, 'success')
       )
     })
-  
 });
 
-router.get('/detail', function(req, res, next) {
+router.get('/detail', LoginCheck, function(req, res, next) {
   const id = req.query.id;
   const result = getDetail(id)
   return result.then((detail) => {
@@ -26,7 +34,7 @@ router.get('/detail', function(req, res, next) {
   })
 });
 
-router.post('/new', function(req, res, next) {
+router.post('/new', LoginCheck, function(req, res, next) {
   const data = req.body
   const result = newBlog(data)
   return result.then((detail) => {
@@ -36,7 +44,7 @@ router.post('/new', function(req, res, next) {
   })
 });
 
-router.post('/update', function(req, res, next) {
+router.post('/update', LoginCheck, function(req, res, next) {
   const id = req.query.id
   const data = req.body
   const result = updateBlog(id, data)
@@ -47,7 +55,7 @@ router.post('/update', function(req, res, next) {
   })
 });
 
-router.post('/del', function(req, res, next) {
+router.post('/del', LoginCheck, function(req, res, next) {
   const id = req.query.id
   let author = req.session.username
   const result = deleteBlog(id, author)

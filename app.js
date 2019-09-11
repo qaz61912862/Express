@@ -4,6 +4,7 @@ var createError = require('http-errors');
 var express = require('express');
 // 路径工具
 var path = require('path');
+var fs = require('fs')
 // 处理cookie
 var cookieParser = require('cookie-parser');
 // 记录日志
@@ -13,6 +14,8 @@ var logger = require('morgan');
 // var usersRouter = require('./routes/users');
 const blogRouter = require('./routes/blog');
 const userRouter = require('./routes/user');
+const carRouter = require('./routes/car');
+
 
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session)
@@ -25,8 +28,23 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+const ENV = process.env.NODE_ENV
 // 写日志
-app.use(logger('dev'));
+if (ENV !== 'production') {
+  // 开发环境
+  app.use(logger('dev'));
+} else {
+  // 线上环境
+  const logFileName = path.join(__dirname, 'logs', 'access.log')
+  const writeStream = fs.createWriteStream(logFileName, {
+    flags: 'a'
+  })
+  app.use(logger('combined', {
+    stream: writeStream
+  }));
+}
+
+
 // 解析post方法data里面数据格式
 app.use(express.json());
 // 解析post urlencoded格式
@@ -50,12 +68,24 @@ app.use(session({
   store: sessionStore
 }));
 
+//设置允许跨域访问该服务.
+app.all('*', function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  //Access-Control-Allow-Headers ,可根据浏览器的F12查看,把对应的粘贴在这里就行
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Methods', '*');
+  res.header('Content-Type', 'application/json;charset=utf-8');
+  next();
+});
 // 处理路由
 // app.use('/', indexRouter);
 // app.use('/users', usersRouter);
 app.use('/api/blog', blogRouter);
 app.use('/api/user', userRouter);
-
+app.use('/api/car', carRouter);
+// app.use('/api/err', () => {
+//   throw new Error('error')
+// })
 
 // catch 404 and forward to error handler
 // 找不到路由，返回404
